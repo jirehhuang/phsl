@@ -1,0 +1,34 @@
+Package: phsl
+Type: Package
+Title: Partitioned and Hybrid Methods for Learning Bayesian Network Structures
+Version: 1.0
+Authors@R: c(
+    person(given = "Jireh",
+           family = "Huang",
+           email = "jirehhuang@ucla.edu",
+           role = c("aut", "cre")),
+    person(given = "Marco", 
+           family = "Scutari",
+           email = "marco.scutari@gmail.com", 
+           role = "ctb"),
+    person(given = "Ariel", 
+           family = "Chow",
+           email = "achow12300@gmail.com", 
+           role = "rev"))
+Description: Partitioned and hybrid methods for learning Bayesian network structures.
+    This package implements the partitioned PC (pPC) algorithm, the p-value adjacency
+    thresholding (PATH) algorithm, and the hybrid greedy initialization (HGI) algorithm
+    for learning Bayesian network structures. Altogether, these algorithms form the 
+    partitioned hybrid greedy search (pHGS) algorithm. These methods build upon and are 
+    implemented so as to extend the capabilities of algorithms featured in the bnlearn 
+    package.
+License: GPL (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Depends: R (>= 3.6.0)
+Imports: Rcpp, bnlearn, pcalg, sparsebnUtils, Matrix, stringr
+LinkingTo: RcppArmadillo, Rcpp
+Suggests: rmarkdown, knitr, testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
