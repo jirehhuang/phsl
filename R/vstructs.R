@@ -14,7 +14,7 @@ vstruct.detect_ <- function (nodes, arcs, mb, data, alpha, B = NULL, test, black
       vstruct.list <- lapply(key_cpp[nodes], vstruct_centered_on, 
                              arcs = apply(arcs, 2, function(x) key_cpp[x]), 
                              dsep_set = attr(mb, "dsep.set"), alpha = alpha, 
-                             nodes = nodes, debug = debug)
+                             nodes = nodes, debug = debug >= 3)
       lapply(vstruct.list, function(x){
         if (nrow(x)){
           return(data.frame(max_a = x[,1],
@@ -34,7 +34,7 @@ vstruct.detect_ <- function (nodes, arcs, mb, data, alpha, B = NULL, test, black
   if (is.null(vstruct.list)){
     ## TODO: rewrite to use key
     vstruct.centered.on = function(x, mb, data, dsep.set) {
-      if (debug) {
+      if (debug >= 3) {
         cat("----------------------------------------------------------------\n")
         cat("* v-structures centered on", x, ".\n")
       }
@@ -46,7 +46,7 @@ vstruct.detect_ <- function (nodes, arcs, mb, data, alpha, B = NULL, test, black
       for (j in 1:nrow(tos.combs)) {
         y = tos.combs[j, 1]
         z = tos.combs[j, 2]
-        if (debug) 
+        if (debug >= 3) 
           cat("  * checking", y, "->", x, "<-", z, "\n")
         if (bnlearn:::is.listed(arcs, c(y, z), either = TRUE)) 
           next
@@ -58,7 +58,7 @@ vstruct.detect_ <- function (nodes, arcs, mb, data, alpha, B = NULL, test, black
           el = dsep.set[[which(sapply(dsep.set, function(x) setequal(x$arc, 
                                                                      c(y, z))))]]
           if (!x %in% el$dsep.set) {
-            if (debug) 
+            if (debug >= 3) 
               cat("    @ detected v-structure", y, "->", 
                   x, "<-", z, "from d-separating set.\n")
             vs = rbind(vs, data.frame(max_a = el$p.value, 
@@ -68,7 +68,7 @@ vstruct.detect_ <- function (nodes, arcs, mb, data, alpha, B = NULL, test, black
         else {
           sx = bnlearn:::smaller(setdiff(mb[[y]][["mb"]], c(x, z)),
                                  setdiff(mb[[z]][["mb"]], c(x, y)))
-          if (debug)
+          if (debug >= 3)
             cat("    > chosen d-separating set: '", sx,
                 "'\n")
           ## allow for true_bn
@@ -84,7 +84,7 @@ vstruct.detect_ <- function (nodes, arcs, mb, data, alpha, B = NULL, test, black
           ## TODO: don't remember why didn't just keep this original condition; dsep?
           # if (a["p.value"] <= alpha){
           if (a["p.value"] < alpha || (alpha < 1 && a["p.value"] <= alpha)){
-            if (debug)
+            if (debug >= 3)
               cat("    @ detected v-structure", y, "->",
                   x, "<-", z, "\n")
             vs = rbind(vs, data.frame(max_a = a["max.p.value"],
@@ -128,7 +128,7 @@ vstruct.apply_ <- function(arcs, vs, nodes, data = NULL,
   ## of v-structures that share a directed edge
   count <- integer(nrow(vs_cpp))
   vstruct_count_cpp(p = length(nodes), count = count, 
-                    vs = vs_cpp, debug = debug)
+                    vs = vs_cpp, debug = debug >= 3)
   vs <- vs[order(count, decreasing = TRUE), , drop = FALSE]
   vs_cpp <- vs2vs_cpp(vs = vs, 
                       nodes = nodes)
@@ -141,7 +141,7 @@ vstruct.apply_ <- function(arcs, vs, nodes, data = NULL,
                                 vs = vs_cpp,
                                 nodes = nodes,
                                 maxp = maxp,
-                                debug = debug)
+                                debug = debug >= 3)
     dirMat <- apply(dirMat, 2, as.integer)
     rownames(dirMat) <- colnames(dirMat) <- colnames(undirMat)
     arcs <- bnlearn:::amat2arcs(dirMat, nodes)
@@ -156,7 +156,7 @@ vstruct.apply_ <- function(arcs, vs, nodes, data = NULL,
     is_discrete <- class(data[[1]]) %in% c("factor", "integer")
     if (is.null(rs))
       rs <- sapply(nodes, R_loglik_dnode, parents = character(0), 
-                   data = data, k = lambda * log(nrow(data)), debug = debug)
+                   data = data, k = lambda * log(nrow(data)), debug = debug >= 3)
     delta <- vs_cpp[,1]
     
     ## greedily apply v-structures
@@ -170,7 +170,7 @@ vstruct.apply_ <- function(arcs, vs, nodes, data = NULL,
                              is_discrete = is_discrete,
                              k = lambda * log(nrow(data)),
                              maxp = maxp,
-                             debug = debug)
+                             debug = debug >= 3)
     ## check
     # bn <- bnlearn::empty.graph(nodes)
     # bnlearn::amat(bn) <- apply(out$graph, 2, as.integer)
@@ -188,8 +188,11 @@ vstruct.apply_ <- function(arcs, vs, nodes, data = NULL,
   }
   end_time <- Sys.time()
   attr(arcs, "time") <- as.numeric(end_time - start_time, unit = 'secs')
-  debug_sprintf(debug, "Applied %s v-structures in %s seconds with %s scores",
-                attr(arcs, "nvs"), attr(arcs, "time"), attr(arcs, "nscores"))
+  debug_cli(debug, cli::cli_alert,
+            c("applied {attr(arcs, 'nvs')} v-structures ",
+              "in {prettyunits::pretty_sec(attr(arcs, 'time'))} ",
+              "with {attr(arcs, 'nscores')} calls"))
+  
   return(arcs)
 }
 
@@ -210,11 +213,11 @@ vstruct.apply_ <- function(arcs, vs, nodes, data = NULL,
 vstructs_ <- function(x, arcs = FALSE, debug = FALSE){
   
   bnlearn:::check.bn.or.fit(x)
-  bnlearn:::check.logical(debug)
+  # bnlearn:::check.logical(debug)
   
   amat <- bnlearn::amat(x)
   vsmat <- amat * 0
-  vs <- vstructs_cpp(amat, vsmat, debug)
+  vs <- vstructs_cpp(amat, vsmat, debug = debug >= 3)
   vs <- apply(vs, 2, function(y) bnlearn::nodes(x)[y+1])
   colnames(vs) <- c("X", "Z", "Y")
   

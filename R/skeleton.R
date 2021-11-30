@@ -14,9 +14,8 @@ skeleton <- function(x, cluster = NULL, whitelist = NULL, blacklist = NULL, test
   if (!method %in% c("ppc", "true", "cig"))
     bnlearn:::check.learning.algorithm(method, class = "constraint")
   test = bnlearn:::check.test(test, x)
-  stopifnot(is.numeric(debug) || is.logical(debug))
-  # bnlearn:::check.logical(debug)  # numeric for ppc_skeleton()
-  # bnlearn:::check.logical(undirected)  # always undirected
+  debug_cli(!(is.numeric(debug) || is.logical(debug)), cli::cli_abort, 
+            "debug must be logical or numeric")  # numeric for ppc_skeleton()
   alpha = bnlearn:::check.alpha(alpha)
   B = bnlearn:::check.B(B, test)
   max.sx = bnlearn:::check.largest.sx.set(max.sx, x)
@@ -25,7 +24,8 @@ skeleton <- function(x, cluster = NULL, whitelist = NULL, blacklist = NULL, test
     parallel = TRUE
     bnlearn:::slaves.setup(cluster)
     if (debug) {
-      warning("disabling debugging output for parallel computing.")
+      debug_cli(TRUE, cli::cli_alert_warning,
+                "disabled debugging output for parallel computing")
       debug = FALSE
     }
   }
@@ -75,21 +75,21 @@ skeleton <- function(x, cluster = NULL, whitelist = NULL, blacklist = NULL, test
     local.structure = 
       bnlearn:::pc.stable.backend(x = x, whitelist = whitelist, 
                                   blacklist = full.blacklist, test = test, alpha = alpha, 
-                                  B = B, max.sx = max.sx, debug = debug, cluster = cluster, 
+                                  B = B, max.sx = max.sx, debug = debug >= 3, cluster = cluster, 
                                   complete = data.info$complete.nodes)
   }
   else if (method == "gs") {
     local.structure = 
       bnlearn:::grow.shrink(x = x, whitelist = whitelist, 
                             blacklist = full.blacklist, test = test, alpha = alpha, 
-                            B = B, max.sx = max.sx, debug = debug, cluster = cluster, 
+                            B = B, max.sx = max.sx, debug = debug >= 3, cluster = cluster, 
                             complete = data.info$complete.nodes)
   }
   else if (method == "iamb") {
     local.structure = 
       bnlearn:::incremental.association(x = x, whitelist = whitelist, 
                                         blacklist = full.blacklist, test = test, alpha = alpha, 
-                                        B = B, max.sx = max.sx, debug = debug, cluster = cluster, 
+                                        B = B, max.sx = max.sx, debug = debug >= 3, cluster = cluster, 
                                         complete = data.info$complete.nodes)
   }
   else if (method == "fast.iamb") {
@@ -97,41 +97,41 @@ skeleton <- function(x, cluster = NULL, whitelist = NULL, blacklist = NULL, test
       bnlearn:::fast.incremental.association(x = x, 
                                              whitelist = whitelist, blacklist = full.blacklist, 
                                              test = test, alpha = alpha, B = B, max.sx = max.sx, 
-                                             debug = debug, cluster = cluster, complete = data.info$complete.nodes)
+                                             debug = debug >= 3, cluster = cluster, complete = data.info$complete.nodes)
   }
   else if (method == "inter.iamb") {
     local.structure = 
       bnlearn:::inter.incremental.association(x = x, 
                                               whitelist = whitelist, blacklist = full.blacklist, 
                                               test = test, alpha = alpha, B = B, max.sx = max.sx, 
-                                              debug = debug, cluster = cluster, complete = data.info$complete.nodes)
+                                              debug = debug >= 3, cluster = cluster, complete = data.info$complete.nodes)
   }
   else if (method == "iamb.fdr") {
     local.structure = 
       bnlearn:::incremental.association.fdr(x = x, 
                                             whitelist = whitelist, blacklist = full.blacklist, 
                                             test = test, alpha = alpha, B = B, max.sx = max.sx, 
-                                            debug = debug, cluster = cluster, complete = data.info$complete.nodes)
+                                            debug = debug >= 3, cluster = cluster, complete = data.info$complete.nodes)
   }
   else if (method == "mmpc") {
     local.structure = 
       bnlearn:::maxmin.pc(x = x, whitelist = whitelist, 
                           blacklist = full.blacklist, test = test, alpha = alpha, 
-                          B = B, debug = debug, max.sx = max.sx, cluster = cluster, 
+                          B = B, debug = debug >= 3, max.sx = max.sx, cluster = cluster, 
                           complete = data.info$complete.nodes)
   }
   else if (method == "si.hiton.pc") {
     local.structure = 
       bnlearn:::si.hiton.pc.backend(x = x, whitelist = whitelist, 
                                     blacklist = full.blacklist, test = test, alpha = alpha, 
-                                    B = B, max.sx = max.sx, debug = debug, cluster = cluster, 
+                                    B = B, max.sx = max.sx, debug = debug >= 3, cluster = cluster, 
                                     complete = data.info$complete.nodes)
   }
   else if (method == "hpc") {
     local.structure = 
       bnlearn:::hybrid.pc.backend(x = x, whitelist = whitelist, 
                                   blacklist = full.blacklist, test = test, alpha = alpha, 
-                                  B = B, max.sx = max.sx, debug = debug, cluster = cluster, 
+                                  B = B, max.sx = max.sx, debug = debug >= 3, cluster = cluster, 
                                   complete = data.info$complete.nodes)
   }
   attr(local.structure, 
@@ -146,8 +146,10 @@ skeleton <- function(x, cluster = NULL, whitelist = NULL, blacklist = NULL, test
     attr(local.structure, "learning")$args$B = B
   
   end_time <- Sys.time()
-  debug_sprintf(debug, "Completed skeleton estimation in %g seconds with %g tests",
-                as.numeric(end_time - start_time, unit = "secs"), bnlearn::test.counter())
+  debug_cli(debug, cli::cli_alert_success,
+            c("completed skeleton estimation with {method} ",
+              "in {prettyunits::pretty_sec(as.numeric(end_time - start_time, unit = 'secs'))} ",
+              "with {bnlearn::test.counter()} calls"))
   
   return(invisible(local.structure))
 }

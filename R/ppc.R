@@ -23,8 +23,9 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
   max_btwn_sx <- min(max.dsep.size, max_btwn_sx)
   max_btwn_nbr <- min(max_btwn_nbr, length(nodes) - 2)
   bnlearn:::check.logical(sort_pval)
-  if (!is.numeric(max_groups) || (max_groups %% 1 != 0) || is.infinite(max_groups))
-    stop("max_groups must be a positive numeric integer")
+  debug_cli(!is.numeric(max_groups) || (max_groups %% 1 != 0) || 
+              is.infinite(max_groups), cli::cli_abort, 
+            "max_groups must be a positive numeric integer")
   nlev <- sapply(x, function(y) length(unique(y)))
   key <- build_key(nodes = nodes)
   
@@ -38,7 +39,7 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
                                       data = x, alpha = alpha, B = B, 
                                       whitelist = whitelist, blacklist = blacklist, 
                                       test = test0, dsep.size = 0, complete = complete, 
-                                      true_bn = true_bn, debug = debug > 1)
+                                      true_bn = true_bn, debug = debug)
   
   if (max_groups > 1){
     distances <- get_distances(nodes = nodes, nnodes = nnodes, key = key,
@@ -66,8 +67,10 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
   times[1] <- as.numeric(end_time_p - start_time_p, unit = "secs")
   tests[1] <- bnlearn::test.counter() - tests[1]
   
-  debug_sprintf(debug, "Divided %g variables into %g groups of sizes %s in %g seconds with %g tests",
-                ncol(x), n_group, paste(table(group), collapse = ', '), times[1], tests[1])
+  debug_cli(debug, cli::cli_alert,
+            c("divided {ncol(x)} variables into {n_group} groups ",
+              "with sizes {paste(table(group), collapse = ', ')} ",
+              "in {prettyunits::pretty_sec(times[1])} with {tests[1]} calls"))
   
   
   ## within cluster skeleton estimation
@@ -85,7 +88,7 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
                             dsep.size = dsep.size, complete = complete, 
                             sort_pval = sort_pval, group = NULL, 
                             parentList = parentList, node.pairs = node.pairs, 
-                            key = key, true_bn = true_bn, debug = debug > 1)
+                            key = key, true_bn = true_bn, debug = debug)
     
     parentList <- node.pairs2parentList(node.pairs = node.pairs[!bool_btwn], 
                                         nodes = nodes, alpha = alpha)
@@ -97,8 +100,9 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
   times[2] <- as.numeric(end_time_w - end_time_p, unit = "secs")
   tests[2] <- bnlearn::test.counter() - sum(tests[1:2])
   
-  debug_sprintf(debug, "Estimated edges within clusters in %g seconds with %g tests",
-                times[2], tests[2])
+  debug_cli(debug, cli::cli_alert,
+            c("estimated edges within {n_group} clusters ",
+              "in {prettyunits::pretty_sec(times[2])} with {tests[2]} calls"))
   
   
   ## screen edges between clusters, if multiple clusters
@@ -116,7 +120,7 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
                             dsep.size = max_btwn_sx, complete = complete, 
                             max_btwn_nbr = max_btwn_nbr, group = NULL, 
                             parentList = parentList, node.pairs = node.pairs, 
-                            key = key, round = 1, true_bn = true_bn, debug = debug > 1)
+                            key = key, round = 1, true_bn = true_bn, debug = debug)
     
     parentList <- node.pairs2parentList(node.pairs = node.pairs,
                                         nodes = nodes, alpha = alpha)
@@ -145,7 +149,7 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
                               max_btwn_nbr = max_btwn_nbr, sort_pval = sort_pval, 
                               group = group, parentList = parentList, 
                               node.pairs = node.pairs, key = key, round = 2, 
-                              true_bn = true_bn, debug = debug > 1)
+                              true_bn = true_bn, debug = debug)
       
       parentList <- node.pairs2parentList(node.pairs = node.pairs,
                                           nodes = nodes, alpha = alpha)
@@ -154,8 +158,9 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
     times[3] <- as.numeric(end_time_b - end_time_w, unit = "secs")
     tests[3] <- bnlearn::test.counter() - sum(tests[1:3])
     
-    debug_sprintf(debug, "Screened edges between clusters in %g seconds with %g tests",
-                  times[3], tests[3])
+    debug_cli(debug, cli::cli_alert,
+              c("screened edges between {n_group} clusters ",
+                "in {prettyunits::pretty_sec(times[3])} with {tests[3]} calls"))
     
     
     bool_pairs <- get_bool_pairs(min_size = 1, node.pairs, alpha, parentList)
@@ -173,7 +178,7 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
                               max_wthn_sx = max_wthn_sx, sort_pval = sort_pval, 
                               group = group, parentList = parentList, 
                               node.pairs = node.pairs, key = key, true_bn = true_bn, 
-                              debug = debug > 1)
+                              debug = debug)
       
       parentList <- node.pairs2parentList(node.pairs = node.pairs,
                                           nodes = nodes, alpha = alpha)
@@ -187,9 +192,11 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
     times[4] <- as.numeric(end_time_c - end_time_b, unit = 'secs')
     tests[4] <- bnlearn::test.counter() - sum(tests[1:4])
     
-    debug_sprintf(debug, "Completed conditional independence tests in %g seconds with %g tests",
-                  times[4], tests[4])
+    debug_cli(debug, cli::cli_alert,
+              c("completed conditional independence investigation ",
+                "in {prettyunits::pretty_sec(times[4])} with {tests[4]} calls"))
   }
+  
   skeleton = do.call(rbind, lapply(node.pairs, function(x) {
     if (x$p.value <= alpha) 
       return(x$arc)
@@ -260,7 +267,7 @@ ppc_heuristic <- function(pair, data, alpha, B, whitelist, blacklist, test, skel
   if ((length(nbr1) < dsep.size) && (length(nbr2) < dsep.size)) 
     return(pair)
   
-  if (debug) {
+  if (debug >= 3) {
     cat("----------------------------------------------------------------\n")
     cat("* investigating", arc[1], "-", arc[2], ", d-separating sets of size", 
         dsep.size, ".\n")
@@ -286,7 +293,7 @@ ppc_heuristic <- function(pair, data, alpha, B, whitelist, blacklist, test, skel
       pair$dsep.set <- attr(a1, "dsep.set")
     }
   }
-  if (debug) 
+  if (debug >= 3) 
     cat("  > neighbours of", arc[2], ":", nbr2, "\n")
   if (dsep.size == 1) 
     nbr2 = setdiff(nbr2, nbr1)
@@ -340,7 +347,7 @@ btwn_heuristic <- function (pair, data, alpha, B, whitelist, blacklist,
   nbr2 = setdiff(nbr2, arc[1])
   if ((length(nbr1) == 0) && (length(nbr2) == 0))
     return(pair)
-  if (debug) {
+  if (debug >= 3) {
     cat("----------------------------------------------------------------\n")
     cat("* investigating", arc[1], "-", arc[2], ", d-separating sets of size", 
         dsep.size, ".\n")
@@ -431,13 +438,13 @@ allsubs.test_ <- function (x, y, sx, fixed = character(0), data, test, B = 0L,
                            max_wthn_sx = max, group = NULL, true_bn = NULL, 
                            debug = FALSE)
 {
-  ## TODO: remove because doesn't store dsep.set for pc
+  ## TODO: remove because doesn't store dsep.set for pc; perhaps is speed needed
   if (FALSE && is.null(true_bn) && is.null(group)){
     
     res <- .Call(bnlearn:::call_allsubs_test, x = x, y = y, sx = c(fixed, sx),
                  fixed = fixed, data = data, test = test, B = B, alpha = alpha,
                  min = as.integer(min), max = as.integer(max), complete = complete,
-                 debug = debug)
+                 debug = debug >= 3)
   } else {
     
     res <- somesubs.test(x = x, y = y, sx = sx, fixed = fixed, 
@@ -497,7 +504,7 @@ somesubs.test <- function (x, y, sx, fixed = character(0), data, test, B = 0L,
           p.value <- .Call(bnlearn:::call_allsubs_test, x = x, y = y, sx = sx[S],
                            fixed = character(0), data = data, test = test, B = B, alpha = alpha,
                            min = dsep.size, max = dsep.size, complete = complete,
-                           debug = debug)[1]
+                           debug = debug >= 3)[1]
         } else {
           ## d-separation
           if (length(S)){
@@ -518,12 +525,12 @@ somesubs.test <- function (x, y, sx, fixed = character(0), data, test, B = 0L,
           res["min.p.value"] <- p.value
         }
         if (p.value > alpha || (alpha == 1 && p.value >= alpha)){
-          if (debug)
+          if (debug >= 3)
             cat(sprintf("   > node %s is independent from %s given %s (p-value: %g)\n", 
                         x, y, paste(sx[S], collapse = " "), as.numeric(p.value)))
           break
         }
-        if (debug)
+        if (debug >= 3)
           cat(sprintf("   > node %s is dependent on %s given %s (p-value: %g)\n", 
                       x, y, paste(sx[S], collapse = " "), as.numeric(p.value)))
         

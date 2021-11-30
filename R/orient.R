@@ -34,7 +34,8 @@ orient <- function(x, cluster = NULL, local.structure, whitelist, blacklist,
     min_alpha <- alpha
     alpha_path <- alpha
   } else{
-    stopifnot(min_alpha < alpha)
+    debug_cli(min_alpha >= alpha, cli::cli_abort, 
+              "min_alpha must be less than alpha")
     min_alpha <- bnlearn:::check.alpha(min_alpha)
   }
   best_alpha <- alpha
@@ -55,7 +56,7 @@ orient <- function(x, cluster = NULL, local.structure, whitelist, blacklist,
                                            data = x, alpha = alpha, B = B, test = test, 
                                            blacklist = blacklist, max.sx = max.sx, 
                                            complete = complete, true_bn = true_bn, 
-                                           debug = debug > 1))
+                                           debug = debug))
     if (is.null(vs))
       vs <- matrix(nrow = 0, ncol = 4)
   }
@@ -64,8 +65,11 @@ orient <- function(x, cluster = NULL, local.structure, whitelist, blacklist,
   times[1] <- ifelse(is.null(true_bn), 
                      as.numeric(end_time_d - start_time_d, unit = 'secs'), 0)
   tests[1] <- bnlearn::test.counter() - tests[1]
-  debug_sprintf(debug, "Detected %g v-structures in %g seconds with %g tests", 
-                nrow(vs), times[1], tests[1])
+  
+  debug_cli(debug, cli::cli_alert,
+            c("detected {nrow(vs)} v-structures ",
+              "in {prettyunits::pretty_sec(times[1])} with {tests[1]} calls"))
+  
   
   ## initialize
   lambda <- 0.5  # TODO: lambda parameter
@@ -158,7 +162,7 @@ orient <- function(x, cluster = NULL, local.structure, whitelist, blacklist,
         }
         arcs <- vstruct.apply_(arcs = arcs, vs = vs_temp, nodes = nodes, 
                                data = if (hgi) x else NULL, rs = rs,
-                               lambda = lambda, maxp = maxp, debug = debug > 1)
+                               lambda = lambda, maxp = maxp, debug = debug)
         times[2] <- attr(arcs, "time")
         tests[2] <- attr(arcs, "nscores")
         
@@ -174,25 +178,12 @@ orient <- function(x, cluster = NULL, local.structure, whitelist, blacklist,
           nscores <- 0
           pdag = list(learning = list(), nodes = structure(rep(0, length(nodes)), 
                                                            names = nodes), arcs = arcs)
-          # arcs <- bnlearn:::cpdag.backend(pdag, moral = TRUE, 
-          #                                 fix = TRUE, debug = debug > 1)$arcs
           amat <- bnlearn:::arcs2amat(arcs = pdag$arcs, nodes = nodes)
           amat <- apply_cpdag_rules(pdag = amat, nodes = nodes, 
-                                    remove_invalid = TRUE, debug = debug)
+                                    remove_invalid = TRUE, debug = debug >= 3)
           arcs <- bnlearn:::amat2arcs(a = amat, nodes = nodes)
           
         } else{
-          
-          ## TODO: check why would this be necessary
-          # if (sum(rs) == 0){
-          #   if (sum(rs_delta$rs) != 0){
-          #     rs <- sapply(nodes, function(x) 0)
-          #     deep_copy_NumericVector(original = rs_delta$rs, copy = rs)
-          #   } else{
-          #     rs <- sapply(nodes, R_loglik_dnode, parents = character(0),
-          #                  data = data, k = lambda * log(nrow(x)), debug = debug)
-          #   }
-          # }
           
           ## initialize
           pdag <- bnlearn:::arcs2amat(arcs, nodes)
@@ -226,9 +217,13 @@ orient <- function(x, cluster = NULL, local.structure, whitelist, blacklist,
         end_time <- Sys.time()
         times[3] <- as.numeric(end_time - start_time, unit = 'secs')
         tests[3] <- nscores
-        debug_sprintf(debug, "Applied rules for estimate %g in %g seconds with %g scores", 
-                      i, times[3], tests[3])
+        
+        debug_cli(debug, cli::cli_alert,
+                  c("applied rules for estimate {i} ",
+                    "in {prettyunits::pretty_sec(times[3])} with {tests[3]} calls"), 
+                  .envir = environment())
       }
+      
       attr(arcs, "alpha") <- attr(bool_vs, "alpha")
       attr(arcs, "times") <- times
       attr(arcs, "tests") <- tests
@@ -282,8 +277,11 @@ orient <- function(x, cluster = NULL, local.structure, whitelist, blacklist,
     pdag$nodes <- bnlearn:::cache.structure(nodes, 
                                             arcs = pdag$arcs)
   }
-  debug_sprintf(debug, "Oriented edges for %g estimate(s) in %g seconds with %g calls", 
-                length(pdag$arcs_path), sum(times), sum(tests))
+  debug_cli(debug, cli::cli_alert_success,
+            c("completed edge orientation for {length(pdag$arcs_path)} ",
+              "estimates with hgi = {hgi} ",
+              "in {prettyunits::pretty_sec(sum(times))} with {sum(tests)} calls"))
+  
   return(pdag)
 }
 
@@ -327,29 +325,28 @@ score_arcs_path <- function(arcs_path, nodes, x, score,
           
           for (node in different){
             if (dag_path[[i-1]]$ns[node] >= 0){
+              
               ## score previous node if not yet scored
-              # dag_path[[i-1]]$ns[node] <- R_loglik_dnode(node, nodes[dag_path[[i-1]]$eL[[node]]],
-              #                                            x, extra.args$k, debug > 1)
               extra.args <- bnlearn:::check.score.args(score = score, network = bn_im1, data = x, 
                                                        extra.args = list(), learning = TRUE)
               dag_path[[i-1]]$ns[node] <- bnlearn:::per.node.score(bn_im1, x, score, node,
-                                                                   extra.args, debug = debug > 1)
+                                                                   extra.args, debug = debug >= 3)
             }
             ## score current node
-            # dag_path[[i]]$ns[node] <- R_loglik_dnode(node, nodes[dag_path[[i]]$eL[[node]]],
-            #                                                   x, extra.args$k, debug > 1)
             increment.test.counter_(1)  # one per score difference
             extra.args <- bnlearn:::check.score.args(score = score, network = bn_i, data = x, 
                                                      extra.args = list(), learning = TRUE)
             dag_path[[i]]$ns[node] <- bnlearn:::per.node.score(bn_i, x, score, node,
-                                                               extra.args, debug = debug > 1)
+                                                               extra.args, debug = debug >= 3)
           }
         }
         ## compute score difference between estimates
         dag_path[[i]]$delta <- sum(dag_path[[i]]$ns[different] - 
                                      dag_path[[i-1]]$ns[different])
-        debug_sprintf(debug, "Score delta of %s between estimates %s and %s", 
-                      dag_path[[i]]$delta, i-1, i)
+        
+        debug_cli(debug >= 2, cli::cli_alert,
+                  c("score delta of {format(dag_path[[i]]$delta, digits = 3, nsmall = 3)} ",
+                    "between estimates {i-1} and {i}"))
       }
     }
   } else{
@@ -362,22 +359,24 @@ score_arcs_path <- function(arcs_path, nodes, x, score,
   if (success <- any(sapply(successes, function(x) is.logical(x) && x))){
     which_best <- which(successes)[which.max(cumsum(sapply(dag_path, 
                                                            `[[`, 'delta'))[successes])]
-    debug_sprintf(debug, "%g admissible PDAG(s) found out of %g", 
-                  sum(successes), length(successes))
   } else{
     which_best <- which.max(cumsum(sapply(dag_path, `[[`, 'delta')))
-    debug_sprintf(debug, "No admissible PDAG found out of %g", 
-                  length(successes))
   }
+  debug_cli(debug >= 2, cli::cli_alert,
+            "{sum(successes)} out of {length(successes)} estimates are admissible")
+  
   names(dag_path) <- sapply(arcs_path, function(x) attr(x, 'alpha'))
   attr(dag_path, 'which_best') <- which_best
   attr(dag_path, 'success') <- success
   attr(dag_path, 'nscores') <- bnlearn::test.counter() - nscores
   end_time <- Sys.time()
-  debug_sprintf(debug, 
-                "Chose alpha = %g out of %g different significance levels with %g scores in %g seconds", 
-                dag_path[[which_best]]$alpha, length(dag_path), attr(dag_path, 'nscores'), 
-                as.numeric(end_time - start_time, units = "secs"))
+  
+  debug_cli(debug >= 2, cli::cli_alert_success,
+            c("chose alpha = {signif(dag_path[[which_best]]$alpha, digits = 3)} ",
+              "out of {length(dag_path)} significance levels ",
+              "in {prettyunits::pretty_sec(as.numeric(end_time - start_time, units = 'secs'))} ",
+              "with {attr(dag_path, 'nscores')} calls"))
+  
   return(dag_path)
 }
 
@@ -416,7 +415,7 @@ get_rs_delta <- function(arcs, vs, nodes, data, lambda = 0.5, debug = FALSE){
   ## currently, only discrete implementation of hgi
   is_discrete <- TRUE
   rs <- sapply(nodes, R_loglik_dnode, parents = character(0),
-               data = data, k = lambda * log(nrow(data)), debug = debug, USE.NAMES = TRUE)
+               data = data, k = lambda * log(nrow(data)), debug = debug >= 3, USE.NAMES = TRUE)
   
   ## TODO: eventually generalizable
   # network <- bnlearn::empty.graph(nodes = nodes)
@@ -442,7 +441,7 @@ get_rs_delta <- function(arcs, vs, nodes, data, lambda = 0.5, debug = FALSE){
                            just_delta = TRUE,
                            is_discrete = is_discrete,
                            k = lambda * log(nrow(data)),
-                           debug = debug)
+                           debug = debug >= 3)
   return(list(rs = rs, 
               delta = c(out$delta), nscores = out$nscores))
 }

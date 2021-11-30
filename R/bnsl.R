@@ -80,10 +80,11 @@ bnsl <- function(x, restrict = "ppc", maximize = "tabu",
     bnlearn:::check.learning.algorithm(maximize, class = "score")
   }
   bnlearn:::check.logical(hgi)
-  if (!is.numeric(path) || (path %% 1 != 0) || is.infinite(path))
-    stop("path must be a positive numeric integer")
+  debug_cli(!is.numeric(path) || (path %% 1 != 0) || is.infinite(path), 
+            cli::cli_abort, "path must be a positive numeric integer")
   if (restrict == "" && maximize == "")
-    stop("No method given for restrict or maximize")
+    debug_cli(TRUE, cli::cli_abort, 
+              "no method given for both restrict and maximize")
   else if ((restrict == "mmpc") && (maximize == "hc"))
     method <- "mmhc"
   else if ((restrict == "hpc") && (maximize == "hc")) 
@@ -96,11 +97,13 @@ bnsl <- function(x, restrict = "ppc", maximize = "tabu",
   algo <- gsub("-.*", "", method)
   if (restrict == ""){
     if (path > 1){
-      warning("Deactivating path because no restrict method supplied")
+      debug_cli(TRUE, cli::cli_alert_warning,
+                "deactivating path because no restrict method supplied")
       path <- 1
     }
     if (hgi){
-      warning("Deactivating hgi because no restrict method supplied")
+      debug_cli(TRUE, cli::cli_alert_warning,
+                "deactivating hgi because no restrict method supplied")
       hgi <- FALSE
     }
   }
@@ -114,7 +117,8 @@ bnsl <- function(x, restrict = "ppc", maximize = "tabu",
   }
   if (path > 1 && (restrict != "ppc" ||
                    !is.null(true_bn))){
-    warning("path can only be used for finite-sample executions of `ppc`; path deactivated")
+    debug_cli(TRUE, cli::cli_alert_warning,
+              c("path can only be used for finite-sample executions of ppc; path deactivated"))
     path <- 1
   }
   min_alpha <- bnlearn:::check.alpha(min_alpha)
@@ -130,8 +134,9 @@ bnsl <- function(x, restrict = "ppc", maximize = "tabu",
     bnlearn:::check.bn(true_bn)
   }
   
-  debug_sprintf(debug, "Structure learning with restrict = %s, path = %g, hgi = %s, maximize = %s", 
-                restrict, path, hgi, maximize)
+  debug_cli(debug, cli::cli_alert_info,
+            c("structure learning with restrict = {restrict}, ",
+              "path = {path}, hgi = {hgi}, maximize = {maximize}"))
   
   rst <- NULL  
   if (restrict %in% c(bnlearn:::constraint.based.algorithms, "ppc", "true", "cig")) {
@@ -151,14 +156,12 @@ bnsl <- function(x, restrict = "ppc", maximize = "tabu",
     end_time <- Sys.time()
     times[1] <- as.numeric(end_time - start_time, unit = "secs")
     tests[1] <- sum(attr(rst, "learning")$ntests)
-    debug_sprintf(debug, "Completed skeleton learning with the %s algorithm in %s seconds with %s calls", 
-                  restrict, times[1], tests[1])
   }
   if (undirected){  
     
     ## no path or hgi
-    if (all(c(restrict, maximize) == ""))
-      stop("Valid constraint-based algorithm must be supplied if undirected graph desired")
+    debug_cli(all(c(restrict, maximize) == ""), cli::cli_abort, 
+              "valid constraint-based algorithm must be supplied if undirected graph desired")
     arcs <- bnlearn:::nbr2arcs(rst)
     learning <- c(attr(rst, "learning"), 
                   list(algo = method, undirected = undirected,
@@ -187,9 +190,7 @@ bnsl <- function(x, restrict = "ppc", maximize = "tabu",
     
     end_time <- Sys.time()
     times[2] <- as.numeric(end_time - start_time, unit = "secs")
-    tests[2] <- res$learning$ntests
-    debug_sprintf(debug, "Completed edge orientation with path = %g and hgi = %s in %s seconds with %s calls",
-                  path, hgi, times[2], tests[2])
+    tests[2] <- res$learning$tests
   }
   if (maximize == ""){
     res <- structure(res, class = "bn")
@@ -221,7 +222,7 @@ bnsl <- function(x, restrict = "ppc", maximize = "tabu",
       whitelist <- bnlearn:::cpdag.arc.extension(whitelist, nodes = nodes)
     maximize.args[critical.arguments] <- list(x, start = start, heuristic = maximize, 
                                               whitelist = whitelist, blacklist = constraints, 
-                                              debug = debug)
+                                              debug = debug >= 3)
     rst <- res[c("learning", "nodes", "arcs")]
     res <- do.call(bnlearn:::greedy.search, maximize.args)
     
@@ -239,8 +240,10 @@ bnsl <- function(x, restrict = "ppc", maximize = "tabu",
     times[3] <- as.numeric(end_time - start_time, unit = "secs")
     tests[3] <- res$learning$ntests - 
       (hgi * length(nodes))  # reference scores already computed in hgi
-    debug_sprintf(debug, "Completed greedy search with the %s algorithm in %s seconds with %s calls",
-                  maximize, times[3], tests[3])
+    
+    debug_cli(debug, cli::cli_alert_success,
+              c("completed greedy search with {maximize} ",
+                "in {prettyunits::pretty_sec(times[3])} with {tests[3]} calls"))
   }
   ## other
   res$learning$maxscore <- res$learning$test
@@ -249,8 +252,9 @@ bnsl <- function(x, restrict = "ppc", maximize = "tabu",
                                                                 undirected, restrict, maximize)
   res$learning[c("times", "tests")] <- list(times, tests)
   
-  debug_sprintf(debug, "Completed structure learning in %s seconds with %s calls",
-                sum(times), sum(tests))
+  debug_cli(debug, cli::cli_alert_success,
+            c("completed structure learning ",
+              "in {prettyunits::pretty_sec(sum(times))} with {sum(tests)} calls"))
   
   return(invisible(res))
 }
