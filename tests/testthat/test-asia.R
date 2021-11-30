@@ -1,6 +1,6 @@
 if (TRUE){
   
-  debug <- FALSE
+  debug <- 3
   
   true_bn <- bnrepository("asia")
   
