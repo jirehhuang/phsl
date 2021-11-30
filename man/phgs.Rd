@@ -15,7 +15,7 @@ phgs(
   min_alpha = 1e-05,
   max_wthn_sx = max.sx,
   max_btwn_sx = max.sx,
-  max_btwn_nbr = max.sx,
+  max_btwn_nbr = ncol(x) - 2,
   sort_pval = TRUE,
   max_groups = 20,
   true_bn = NULL,

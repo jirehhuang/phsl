@@ -11,9 +11,9 @@ bnsl(
   restrict.args = list(),
   maximize.args = list(),
   undirected = FALSE,
-  path = 10,
+  path = 1,
   min_alpha = 1e-05,
-  hgi = TRUE,
+  hgi = FALSE,
   true_bn = NULL,
   whitelist = NULL,
   blacklist = NULL,
@@ -79,19 +79,19 @@ x <- as.data.frame(sapply(x, function(x) as.factor(as.integer(x) - 1L)),
 
 ## pPC with PATH
 bn1 <- bnsl(x = x, restrict = "ppc", maximize = "",
-            restrict.args = list(alpha = 1e-2, max.sx = 3, sort_pval = TRUE),
+            restrict.args = list(alpha = 1e-3, max.sx = 3, sort_pval = TRUE),
             maximize.args = list(maxp = 8), path = 10, min_alpha = 1e-5,
             hgi = FALSE, debug = TRUE)
 
 ## pHGS (pPC with PATH, HGI, and greedy search)
 bn2 <- bnsl(x = x, restrict = "ppc", maximize = "tabu",
-            restrict.args = list(alpha = 1e-2, max.sx = 3, sort_pval = TRUE),
+            restrict.args = list(alpha = 1e-3, max.sx = 3, sort_pval = TRUE),
             maximize.args = list(maxp = 8, tabu = 10, max.tabu = 10),
             path = 10, min_alpha = 1e-5, hgi = TRUE, debug = TRUE)
 
 ## MMHC with HGI
 bn3 <- bnsl(x = x, restrict = "mmpc", maximize = "hc",
-            restrict.args = list(alpha = 1e-2, max.sx = 3, sort_pval = TRUE),
+            restrict.args = list(alpha = 1e-3, max.sx = 3, sort_pval = TRUE),
             maximize.args = list(maxp = 8), hgi = TRUE, debug = TRUE)
 }
 \references{

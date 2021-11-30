@@ -4,9 +4,15 @@
 \name{phsl-package}
 \alias{phsl}
 \alias{phsl-package}
-\title{phsl: Partitioned Hybrid Methods for Learning Bayesian Network Structures}
+\title{phsl: Partitioned and Hybrid Methods for Learning Bayesian Network Structures}
 \description{
-What the package does (one paragraph).
+Partitioned and hybrid methods for learning Bayesian network structures.
+    This package implements the partitioned PC (pPC) algorithm, the p-value adjacency
+    thresholding (PATH) algorithm, and the hybrid greedy initialization (HGI) algorithm
+    for learning Bayesian network structures. Altogether, these algorithms form the 
+    partitioned hybrid greedy search (pHGS) algorithm. These methods build upon and are 
+    implemented so as to extend the capabilities of algorithms featured in the bnlearn 
+    package.
 }
 \author{
 \strong{Maintainer}: Jireh Huang \email{jirehhuang@ucla.edu}
@@ -14,7 +20,7 @@ What the package does (one paragraph).
 Other contributors:
 \itemize{
   \item Marco Scutari \email{marco.scutari@gmail.com} [contributor]
-  \item Ariel Chow \email{arielcheng12@gmail.com} [reviewer]
+  \item Ariel Chow \email{achow12300@gmail.com} [reviewer]
 }
 
 }
