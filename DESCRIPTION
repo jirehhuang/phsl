@@ -27,7 +27,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends: R (>= 3.6.0)
-Imports: Rcpp, bnlearn, pcalg, sparsebnUtils, Matrix, stringr
+Imports: Rcpp, bnlearn, pcalg, sparsebnUtils, Matrix, stringr, cli
 LinkingTo: RcppArmadillo, Rcpp
 Suggests: rmarkdown, knitr, testthat (>= 3.0.0)
 Config/testthat/edition: 3

@@ -42,8 +42,99 @@ bnrepository <- function(x){
 
 
 
-## width of function portion of debugging output
+# Width of function portion of debugging output
+
 DEBUG_WIDTH <- 18
+
+
+
+# Determine minimum debug width
+
+debug_width <- function(name = "phsl", add = 2){
+  
+  ns <- ls(getNamespace(name = name))
+  ns <- ns[!grepl(sprintf("_%s", name), ns)]
+  max(nchar(ns)) + add
+}
+
+
+
+# Print debugging output with cli
+
+debug_cli <- function(debug,
+                      fun = cli::cli_alert,
+                      text = "",
+                      ...){
+  
+  if (debug){
+    
+    ## identify calling function in namespace
+    ns <- ls(getNamespace(name = "phsl"))
+    which <- -1
+    repeat{
+      fn <- sys.call(which = which)[1]
+      fn <- gsub("\\(.*", "", as.character(fn))
+      fn <- gsub(".*:", "", fn)
+      if (length(fn) == 0 || fn %in% ns) break
+      which <- which - 1
+    }
+    if (length(fn) == 0)
+      fn <- "[UNKNOWN]"
+    
+    fn <- sprintf("{.field {.strong %s}}:", fn)
+    fn <- stringr::str_pad(fn, width = max(DEBUG_WIDTH + 10 + 9,
+                                           nchar(fn) + 2), side = "right")
+    
+    ## text message
+    text <- c(fn, text)  # glue
+    
+    ## prepare and execute function
+    if (!is.function(fun)){
+      
+      ## TODO: replace with cli::cli_text
+      fun <- cli::cli_alert
+    }
+    if (identical(fun, cli::cli_progress_bar)){
+      
+      text <- c(cli::symbol$arrow_right, " ", text)
+    }
+    
+    args <- list(...)
+    if (is.null(args[[".envir"]]))
+      args[[".envir"]] <- sys.frame(which = which)
+    
+    ## add text
+    formals_nms <- names(formals(fun))
+    if ("text" %in% formals_nms){
+      
+      args$text <- text
+      
+    } else if ("msg" %in% formals_nms){
+      
+      args$msg <- text
+      
+    } else if ("message" %in% formals_nms){
+      
+      ## TODO: check glue behavior of cli::cli_abort()
+      args$message <- text
+      
+    } else if ("format" %in% formals_nms){
+      
+      args$format <- text
+      
+    }
+    ## modify other arguments
+    if ("format_done" %in% names(args)){
+      
+      args$format_done <- c(green_tick, " ", fn, args$format_done)
+    }
+    if ("format_failed" %in% names(args)){
+      
+      args$format_failed <- c(red_cross, " ", fn, args$format_failed)
+    }
+    do.call(what = fun, args = args)
+  }
+}
 
 
 
@@ -69,6 +160,8 @@ DEBUG_WIDTH <- 18
 # fn(debug = TRUE)
 
 debug_sprintf <- function(debug, fmt, ...){
+  
+  # deprecated; replaced by debug_cli()
   
   if (debug){
     
