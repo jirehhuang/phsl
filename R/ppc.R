@@ -431,8 +431,8 @@ allsubs.test_ <- function (x, y, sx, fixed = character(0), data, test, B = 0L,
                            max_wthn_sx = max, group = NULL, true_bn = NULL, 
                            debug = FALSE)
 {
-  ## TODO: if no PATH as well, then that's fine because don't need dsep.set
-  if (is.null(true_bn) && is.null(group)){
+  ## TODO: remove because doesn't store dsep.set for pc
+  if (FALSE && is.null(true_bn) && is.null(group)){
     
     res <- .Call(bnlearn:::call_allsubs_test, x = x, y = y, sx = c(fixed, sx),
                  fixed = fixed, data = data, test = test, B = B, alpha = alpha,
