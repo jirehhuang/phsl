@@ -9,7 +9,7 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
 {
   times <- tests <- 
     c(partition = 0, within = 0, between = 0, complete = 0)
-  times[] <- tests[] <- bnlearn::test.counter()
+  tests[] <- 1 * bnlearn::test.counter()
   
   nodes <- names(x)
   nnodes <- length(nodes)
@@ -195,8 +195,10 @@ ppc_skeleton <- function (x, cluster = NULL, whitelist, blacklist, test, alpha, 
     debug_cli(debug, cli::cli_alert,
               c("completed conditional independence investigation ",
                 "in {prettyunits::pretty_sec(times[4])} with {tests[4]} calls"))
+  } else{
+    
+    tests[3:4] <- 0
   }
-  
   skeleton = do.call(rbind, lapply(node.pairs, function(x) {
     if (x$p.value <= alpha) 
       return(x$arc)
