@@ -31,7 +31,7 @@
 #' @details None.
 #' @return A Bayesian network as an object of class \code{bn}.
 #' @author Jireh Huang (\email{jirehhuang@@ucla.edu})
-#' @references \href{https://arxiv.org/abs/2103.12188}{Huang, J., & Zhou, Q. (2021). Partitioned hybrid learning of Bayesian network structures. arXiv preprint arXiv:2103.12188.}
+#' @references \href{https://doi.org/10.1007/s10994-022-06145-4}{Huang, J., & Zhou, Q. (2022). Partitioned hybrid learning of Bayesian network structures. \emph{Machine Learning}. https://doi.org/10.1007/s10994-022-06145-4}
 #' @seealso \code{\link{ppc}}, \code{\link{phgs}}
 #' @examples
 #' ## Read Bayesian network object 
@@ -268,7 +268,8 @@ bnsl <- function(x, restrict = "ppc", maximize = "tabu",
 #' @param x,undirected,alpha,max.sx,maxp,path,min_alpha,hgi,max_wthn_sx,max_btwn_sx,max_btwn_nbr,sort_pval,max_groups,true_bn,cluster,whitelist,blacklist,debug see \code{\link{bnsl}} for a description of arguments.
 #' @return A Bayesian network as an object of class \code{bn}.
 #' @author Jireh Huang (\email{jirehhuang@@ucla.edu})
-#' @seealso \code{\link{ppc}}, \code{\link{phgs}}
+#' #' @references \href{https://doi.org/10.1007/s10994-022-06145-4}{Huang, J., & Zhou, Q. (2022). Partitioned hybrid learning of Bayesian network structures. \emph{Machine Learning}. https://doi.org/10.1007/s10994-022-06145-4}
+#' @seealso \code{\link{bnsl}}, \code{\link{phgs}}
 #' @examples
 #' ## Read Bayesian network object 
 #' true_bn <- bnrepository("child")
@@ -325,7 +326,8 @@ ppc <- function(x, undirected = FALSE, alpha = NULL, max.sx = NULL,
 #' @details See \code{\link{bnsl}}.
 #' @return A Bayesian network as an object of class \code{bn}.
 #' @author Jireh Huang (\email{jirehhuang@@ucla.edu})
-#' @seealso \code{\link{ppc}}, \code{\link{phgs}}
+#' #' @references \href{https://doi.org/10.1007/s10994-022-06145-4}{Huang, J., & Zhou, Q. (2022). Partitioned hybrid learning of Bayesian network structures. \emph{Machine Learning}. https://doi.org/10.1007/s10994-022-06145-4}
+#' @seealso \code{\link{bnsl}}, \code{\link{ppc}}
 #' @examples
 #' ## Read Bayesian network object 
 #' true_bn <- bnrepository("child")

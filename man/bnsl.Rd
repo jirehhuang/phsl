@@ -95,7 +95,7 @@ bn3 <- bnsl(x = x, restrict = "mmpc", maximize = "hc",
             maximize.args = list(maxp = 8), hgi = TRUE, debug = TRUE)
 }
 \references{
-\href{https://arxiv.org/abs/2103.12188}{Huang, J., & Zhou, Q. (2021). Partitioned hybrid learning of Bayesian network structures. arXiv preprint arXiv:2103.12188.}
+\href{https://doi.org/10.1007/s10994-022-06145-4}{Huang, J., & Zhou, Q. (2022). Partitioned hybrid learning of Bayesian network structures. \emph{Machine Learning}. https://doi.org/10.1007/s10994-022-06145-4}
 }
 \seealso{
 \code{\link{ppc}}, \code{\link{phgs}}

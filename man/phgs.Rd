@@ -62,8 +62,9 @@ bn2 <- phgs(x = x, maximize = "tabu",
             debug = TRUE)
 }
 \seealso{
-\code{\link{ppc}}, \code{\link{phgs}}
+\code{\link{bnsl}}, \code{\link{ppc}}
 }
 \author{
 Jireh Huang (\email{jirehhuang@ucla.edu})
+#' @references \href{https://doi.org/10.1007/s10994-022-06145-4}{Huang, J., & Zhou, Q. (2022). Partitioned hybrid learning of Bayesian network structures. \emph{Machine Learning}. https://doi.org/10.1007/s10994-022-06145-4}
 }
