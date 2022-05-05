@@ -33,7 +33,7 @@ hybrid approaches. See `help(bnsl)` for more details and examples.
 Wrapper functions `ppc()` and `phgs()` contain presets to implement pPC
 with PATH and pHGS, respectively.
 
-# Reference
+# References
 
 Please cite the following paper when using any part of this package,
 modified or as is.
@@ -41,3 +41,10 @@ modified or as is.
 [Huang, J., & Zhou, Q. (2022). Partitioned hybrid learning of Bayesian
 network structures. *Machine Learning*.
 https://doi.org/10.1007/s10994-022-06145-4](https://doi.org/10.1007/s10994-022-06145-4)
+
+This package relies heavily on and borrows functionalities from the
+[bnlearn](https://www.bnlearn.com/) package.
+
+[Scutari, M. (2010). Learning Bayesian Networks with the bnlearn R
+Package. *Journal of Statistical Software*, 35(3):1––22.
+http://www.jstatsoft.org/v35/i03/](http://www.jstatsoft.org/v35/i03/)
