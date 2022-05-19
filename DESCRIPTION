@@ -22,7 +22,7 @@ Description: Partitioned and hybrid methods for learning Bayesian network struct
     partitioned hybrid greedy search (pHGS) algorithm. These methods build upon and are 
     implemented so as to extend the capabilities of algorithms featured in the bnlearn 
     package.
-License: GPL (>= 2)
+License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
