@@ -33,6 +33,43 @@ hybrid approaches. See `help(bnsl)` for more details and examples.
 Wrapper functions `ppc()` and `phgs()` contain presets to implement pPC
 with PATH and pHGS, respectively.
 
+# Scaling
+
+Up to 1200 copies of the
+[CANCER](https://www.bnlearn.com/bnrepository/discrete-small.html#cancer)
+network were tiled to obtain the 12 networks with numbers of nodes and
+edges shown in the following table.
+
+| *p*  | \|**E**\| |
+|:----:|:---------:|
+|  5   |     4     |
+|  25  |    27     |
+|  50  |    56     |
+| 125  |    140    |
+| 250  |    273    |
+| 500  |    558    |
+| 1000 |   1088    |
+| 2000 |   2249    |
+| 3000 |   3342    |
+| 4000 |   4467    |
+| 5000 |   5638    |
+| 6000 |   6653    |
+
+Five datasets were generated for each network configuration with
+*n* = 1000 samples, and the following algorithms were executed on these
+datasets with `alpha = 0.05` and `max.sx = 3`. `bnlearn::pc.stable(...)`
+is the bnlearn implementation of PC(-stable),
+`phsl::ppc(..., max_groups = 1)` is the phsl version by executing pPC
+with *κ* = 1, and `phsl::ppc(...)` is the pPC algorithm. The timing
+results are shown in the following figure.
+
+<img src="inst/figure/phsl_scale_pc_time.png" width="100%" />
+
+While pPC and PC in phsl executed on the datasets with *p* = 6000
+variables in approximately 80 minutes and 13 hours, respectively, the
+bnlearn implementation of PC struggled to execute on even 2000
+variables, requiring over 50 hours, over 850 times slower than pPC.
+
 # References
 
 Please cite the following paper when using any part of this package,
